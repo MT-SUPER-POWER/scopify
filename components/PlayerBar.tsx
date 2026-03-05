@@ -75,10 +75,10 @@ export const PlayerBar = () => {
   };
 
   return (
-    <div className="h-22.5 bg-black w-full flex items-center px-4 justify-between shrink-0 z-20">
+    <div className="h-22.5 bg-black w-full flex px-4 items-center justify-between z-20">
 
       {/* Left: Song Info */}
-      <div className="flex items-center gap-3.5 w-[30%] min-w-45">
+      <div className="flex items-center gap-3.5 flex-3">
         <div className="w-14 h-14 rounded-md overflow-hidden relative group cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.5)] bg-zinc-800">
           <img
             src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop"
@@ -109,7 +109,7 @@ export const PlayerBar = () => {
       </div>
 
       {/* Center: Controls */}
-      <div className="flex flex-col items-center justify-center max-w-180.5 w-[40%] gap-1.5">
+      <div className="flex flex-col items-center justify-center max-w-180.5 flex-4 gap-1.5">
         <div className="flex items-center gap-5 mt-1">
           <button className="text-[#b3b3b3] hover:text-white transition-colors relative after:content-[''] after:absolute after:-bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-[#1ed760] after:rounded-full after:opacity-0 hover:after:opacity-100">
             <Shuffle className="w-5 h-5" />
@@ -117,7 +117,6 @@ export const PlayerBar = () => {
           <button className="text-[#b3b3b3] hover:text-white transition-colors">
             <SkipBack className="w-5 h-5 fill-current" />
           </button>
-
           <button
             onClick={() => setIsPlaying(!isPlaying)}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-all hover:bg-gray-200 active:scale-95"
@@ -125,7 +124,7 @@ export const PlayerBar = () => {
             {isPlaying ? (
               <Pause className="w-5 h-5 fill-current" />
             ) : (
-              <Play className="w-5 h-5 fill-current ml-0.5" />
+              <Play className="w-5 h-5 fill-current" />
             )}
           </button>
 
@@ -159,7 +158,7 @@ export const PlayerBar = () => {
       </div>
 
       {/* Right: Extra Controls */}
-      <div className="flex items-center justify-end gap-3 w-[30%] min-w-45 text-[#b3b3b3]">
+      <div className="flex items-center justify-end gap-3 flex-3 text-[#b3b3b3]">
         <button
           onClick={() => toggleLyrics()}
           className={`hover:text-white transition-colors ${isLyricsOpen ? "text-[#1db954]" : ""}`}

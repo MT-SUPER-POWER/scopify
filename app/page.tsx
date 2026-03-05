@@ -1,16 +1,21 @@
-"use client";
+'use client';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PACKAGE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { Sidebar } from "../components/Sidebar";
 import Header from "../components/Header";
+import { Sidebar } from "../components/Sidebar";
 import { PlayerBar } from "../components/PlayerBar";
 import { MockRouterContent } from "../components/MockRouterContent";
 import { SearchModal } from "../components/SearchModal";
 import { ReactNode, useEffect, useState } from "react";
-import { Group, Panel, Separator } from "react-resizable-panels";
 import { LyricsModal } from "../components/LyricModal";
 import { LyricsProvider } from "../components/LyricsContext";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { useDefaultLayout } from "react-resizable-panels";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ UI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -19,83 +24,69 @@ export default function MusicPlayerLayout({
 }: {
   children?: ReactNode;
 }) {
-
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ VARIABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // BUG: 不知道为什么还是会走 node.js 去找 localStorage 导致报错，但是功能正确，我就不管了，报错不影响使用，报错也只是再刷新页面的时候出现
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    groupId: "unique-group-id",
+    storage: localStorage
+  });
+
   // 全局快捷键监听
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 捕获 Ctrl+K 或 Cmd+K
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault(); // 极其重要：阻止浏览器默认的搜索栏跳转行为
+        e.preventDefault();
         setIsSearchOpen((prev) => !prev);
       }
-      // 捕获 ESC 关闭面板
       if (e.key === "Escape" && isSearchOpen) {
         e.preventDefault();
-        setIsSearchOpen(false); // 直接关闭，不是 toggle
+        setIsSearchOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown); // 卸载组件时清理监听器，防止内存泄漏
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isSearchOpen]);
 
   return (
     <LyricsProvider>
-      {/* 外层容器：纯黑背景，包含所有模块 */}
-      <div className="w-full h-screen flex flex-col bg-black text-white font-sans overflow-hidden select-none">
-        {/* 挂载搜索模态框 */}
-        <SearchModal
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-        />
-
-        {/* 歌词模式模态 */}
+      <div className="w-full h-screen flex flex-col bg-black text-white font-sans overflow-hidden select-none p-2 gap-2">
+        <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         <LyricsModal />
 
-        {/* 核心内容区 */}
-        <div className="flex-1 flex flex-col overflow-hidden p-2 gap-2 pb-0">
-          {/* 使用 Group 实现可拖拽调整大小 */}
-          <Group orientation="horizontal" className="h-full">
-            {/* 左侧栏 */}
-            <Panel defaultSize="20%" minSize="7%" maxSize="25%">
-              <div className="h-full bg-[#0f0f0f] rounded-lg overflow-hidden">
-                <Sidebar />
-              </div>
-            </Panel>
+        <div className="flex-1 min-h-0 relative">
+          <ResizablePanelGroup orientation="horizontal"
+            defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
+            {/* 左侧侧边栏 */}
+            <ResizablePanel
+              defaultSize="20%"
+              minSize="15%"
+              maxSize="40%"
+              collapsible
+              collapsedSize={80}
+              className="bg-[#0f0f0f] rounded-lg overflow-hidden"
+            >
+              <Sidebar />
+            </ResizablePanel>
 
-            {/* 拖拽调整柄 */}
-            <Separator className="w-2 cursor-col-resize relative flex justify-center items-center group transition-all">
-              <div className="w-px h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity delay-150" />
-            </Separator>
+            {/* 拖拽柄 - 透明但有感应热区 */}
+            <ResizableHandle className="w-2 bg-transparent hover:bg-white/5 transition-colors" />
 
             {/* 右侧主内容 */}
-            <Panel>
-              <div className="h-full bg-[#121212] rounded-lg relative overflow-hidden flex flex-col min-w-0">
+            <ResizablePanel defaultSize={80}>
+              <div className="h-full bg-[#121212] rounded-lg relative flex flex-col min-w-0">
                 <Header onOpenSearch={() => setIsSearchOpen(true)} />
-
-                {/* 滚动区域 */}
-                <main
-                  className="flex-1 overflow-y-auto relative
-                  [&::-webkit-scrollbar]:w-3
-                  [&::-webkit-scrollbar-track]:bg-transparent
-                  [&::-webkit-scrollbar-thumb]:bg-transparent
-                  hover:[&::-webkit-scrollbar-thumb]:bg-white/30
-                  [&::-webkit-scrollbar-thumb]:border-[3px]
-                  [&::-webkit-scrollbar-thumb]:border-[#121212]
-                  [&::-webkit-scrollbar-thumb]:rounded-full"
-                >
+                <main className="flex-1 overflow-y-auto relative scrollbar-custom">
                   {children ? children : <MockRouterContent />}
                 </main>
               </div>
-            </Panel>
-          </Group>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
 
-        {/* 底部固定播放条 */}
         <PlayerBar />
       </div>
     </LyricsProvider>

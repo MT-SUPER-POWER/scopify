@@ -2,143 +2,116 @@
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PACKAGE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { Library, Plus, ArrowRight } from "lucide-react";
+import { Library } from "lucide-react"
 import playlist from "@/assets/data/playlist.json";
 import artist from "@/assets/data/artist.json";
-import { LibraryItem } from "./LibraryItem";
-import { useReducer, useState } from "react";
-import { PanelLeftClose } from "lucide-react";
+import { useReducer, useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { LibraryItem } from "./LibraryItem";
+import { SiderBarMenu } from "./Siderbar/SiderbarMenu";
+import { FiliterMenu } from "./Siderbar/FiliterMenut";
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ CONSTANTS & UTILS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ UTILS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function reducer(
-  _state: 0 | 1 | 2,
-  action: { type: "ALL" | "PLAYLISTS" | "ARTISTS" },
-) {
+function reducer(_state: 0 | 1 | 2, action: { type: "ALL" | "PLAYLISTS" | "ARTISTS" }) {
   switch (action.type) {
-    case "ALL":
-      return 0;
-    case "PLAYLISTS":
-      return 1;
-    case "ARTISTS":
-      return 2;
-    default:
-      throw new Error();
+    case "ALL": return 0;
+    case "PLAYLISTS": return 1;
+    case "ARTISTS": return 2;
+    default: throw new Error();
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ UI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ MAIN UI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const Sidebar = () => {
+export const Sidebar = ({ isCollapsed = false }: { isCollapsed?: boolean }) => {
   const [state, dispatch] = useReducer(reducer, 0);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // NOTE: 利用 ResizeObserver 监听侧边栏容器的实际像素宽度
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(300);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      setWidth(entries[0].contentRect.width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // 根据容器真实宽度判定：
+  // isNarrow: 宽度不够装下三个操作按钮，开始收纳成汉堡菜单并且隐藏 Your Library 的文字，只留两侧图标水平排列
+  const isNarrow = width < 260;
+  // isVeryNarrow: 极其狭窄
+  const isVeryNarrow = width < 150;
 
   return (
-    // 根据是否折叠动态调整宽度和对齐样式
-    <div className={cn(
-      "flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden",
-      isCollapsed ? "w-18 items-center" : "w-full"
-    )}>
-      {/* 顶部工具栏 */}
+    <div
+      ref={containerRef}
+      className={cn(
+        "flex flex-col h-full w-full ",
+        "transition-all duration-300 ease-in-out",
+        "overflow-hidden bg-[#121212] rounded-lg",
+        (isVeryNarrow && "justify-center gap-3")
+      )}
+    >
+
+      {/* Header */}
       <div className={cn(
-        "group/header flex items-center p-4 text-zinc-400 shrink-0 gap-2 w-full",
-        isCollapsed ? "flex-col gap-4" : "justify-between"
+        "group/header flex items-center py-4 px-3 text-zinc-400 shrink-0",
+        // 如果极度狭小，我们居中只展示单个库图标。如果没那么窄或者是收纳模式，横向排布并两边推开
+        (isCollapsed || isVeryNarrow) ? "justify-center" : "justify-between"
       )}>
-        {/* Logo 和 收纳按钮 */}
-        <div
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center gap-2 hover:text-white cursor-pointer transition-colors font-semibold relative overflow-visible"
-        >
-          {/* 收纳按钮：仅在非折叠状态且 hover 时显示 */}
-          {!isCollapsed && (
-            <div className="hidden sm:block absolute -left-1 opacity-0 group-hover/header:opacity-100 transition-all duration-300 pointer-events-none group-hover/header:pointer-events-auto">
-              <PanelLeftClose className="w-5 h-5 hover:scale-110 active:scale-95 transition-transform" />
-            </div>
-          )}
+        {/* 左侧区域: Library Icon + (按需显示的 Text) */}
+        <div className={cn(
+          "flex items-center hover:text-white cursor-pointer",
+          "transition-colors font-semibold overflow-hidden",
+          "gap-2"
+        )}>
+          <Library className={cn("w-6 h-6 transition-transform shrink-0",
+            (isCollapsed || isVeryNarrow) && "w-8 h-8")} />
+          {/* 当未折叠且宽度允许时，才显示 Your Library 文字 */}
+          {!isVeryNarrow && (<span className="truncate min-w-0">Your Library</span>)}
+        </div>
 
-          {/* 图标和文字 */}
-          <div className={cn(
-            "flex items-center gap-2 transition-all duration-300",
-            !isCollapsed && "sm:group-hover/header:translate-x-7"
-          )}>
-            <Library className={cn("w-6 h-6 transition-transform", isCollapsed && "hover:scale-110 text-white")} />
-            {!isCollapsed && <span className="truncate">Your Library</span>}
+        {/* 右侧区域: 按钮或汉堡菜单 */}
+        {!isCollapsed && !isVeryNarrow &&
+          <div className="flex items-center shrink-0 text-zinc-400">
+            <SiderBarMenu />
           </div>
-        </div>
+        }
+      </div>
 
-        {/* 右侧按钮：即使收纳，也保留核心功能，改为垂直排列或紧凑布局 */}
-        <div className={cn("flex items-center gap-2", isCollapsed ? "flex-col" : "")}>
-          <button className="hover:text-white hover:bg-[#1a1a1a] rounded-full p-1.5 transition-colors">
-            <Plus className="w-5 h-5" />
-          </button>
-          {!isCollapsed && (
-            <button className="hover:text-white hover:bg-[#1a1a1a] rounded-full p-1.5 transition-colors">
-              <ArrowRight className="w-5 h-5" />
+      {/* 歌单过滤选择 */}
+      {!isVeryNarrow ? (
+        <div className="flex gap-2 px-4 mb-2 overflow-x-auto shrink-0 scrollbar-custom-h">
+          {(["ALL", "PLAYLISTS", "ARTISTS"] as const).map((type, idx) => (
+            <button
+              key={type}
+              onClick={() => dispatch({ type })}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-xs font-bold transition-all flex justify-center shrink-0",
+                state === idx ? "bg-white text-black" : "bg-[#242424] text-white hover:bg-[#2a2a2a]"
+              )}
+            >
+              {type.charAt(0) + type.slice(1).toLowerCase()}
             </button>
-          )}
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-center -mt-2">
+          <FiliterMenu />
+        </div>
+      )}
 
-      {/* Filter Pills：收纳时改为垂直的小点或极简图标，或者保留 All/PL/AR 的首字母 */}
-      <div
-        className={cn(
-          "flex gap-2 px-4 mb-2 overflow-x-auto shrink-0 transition-all duration-300",
-          isCollapsed ? "flex-col items-center px-0" : "flex-row [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-        )}
-      >
-        <button
-          onClick={() => dispatch({ type: "ALL" })}
-          className={cn(
-            "rounded-full text-xs font-bold transition-all flex items-center justify-center shrink-0",
-            isCollapsed ? "w-8 h-8" : "px-3 py-1.5",
-            state === 0 ? "bg-white text-black" : "bg-[#242424] text-white hover:bg-[#2a2a2a]"
-          )}
-          title="All"
-        >
-          {isCollapsed ? "A" : "All"}
-        </button>
-        <button
-          onClick={() => dispatch({ type: "PLAYLISTS" })}
-          className={cn(
-            "rounded-full text-xs font-bold transition-all flex items-center justify-center shrink-0",
-            isCollapsed ? "w-8 h-8" : "px-3 py-1.5",
-            state === 1 ? "bg-white text-black" : "bg-[#242424] text-white hover:bg-[#2a2a2a]"
-          )}
-          title="Playlists"
-        >
-          {isCollapsed ? "P" : "Playlists"}
-        </button>
-        <button
-          onClick={() => dispatch({ type: "ARTISTS" })}
-          className={cn(
-            "rounded-full text-xs font-bold transition-all flex items-center justify-center shrink-0",
-            isCollapsed ? "w-8 h-8" : "px-3 py-1.5",
-            state === 2 ? "bg-white text-black" : "bg-[#242424] text-white hover:bg-[#2a2a2a]"
-          )}
-          title="Artists"
-        >
-          {isCollapsed ? "R" : "Artists"}
-        </button>
-      </div>
-
-      {/* Library List */}
-      <div
-        className={cn(
-          "flex-1 overflow-y-auto px-2 space-y-2 pb-2 scrollbar-none transition-all duration-300",
-          isCollapsed ? "px-0" : ""
-        )}
-      >
-        {/* ...existing code... */}
-
+      {/* 曲库 */}
+      <div className="flex-1 overflow-y-auto px-2 space-y-1 pb-2 scrollbar-custom">
         {(state === 0 || state === 1) &&
           playlist.map((item) => (
             <LibraryItem
               key={item.id}
-              id={item.id}
-              title={item.title}
-              subtitle={item.subtitle}
-              coverImg={item.coverImg}
+              {...item}
               isCollapsed={isCollapsed}
             />
           ))}
@@ -147,10 +120,7 @@ export const Sidebar = () => {
           artist.map((item) => (
             <LibraryItem
               key={item.id}
-              id={item.id}
-              title={item.title}
-              subtitle={item.subtitle}
-              coverImg={item.coverImg}
+              {...item}
               isCollapsed={isCollapsed}
             />
           ))}

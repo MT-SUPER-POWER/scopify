@@ -60,8 +60,12 @@ const Header = ({ onOpenSearch }: { onOpenSearch?: () => void }) => {
           <Users className="w-5 h-5" />
         </button>
         <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white hover:scale-105 transition-transform border-[3px] border-black/70 hover:border-zinc-700">
+          {/* TODO: 拆分作为一个单独的 Mock 组件，只有用户没有上传自己头像的时候来用 */}
+          {/* TODO: 加一个点击就出现的下拉菜单给用户头像 */}
           <div className="w-full h-full rounded-full bg-pink-600 flex items-center justify-center">
-            <span className="text-xs font-bold">A</span>
+            <button>
+              <span className="text-xs font-bold">M</span>
+            </button>
           </div>
         </button>
       </div>

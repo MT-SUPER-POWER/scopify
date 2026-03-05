@@ -211,7 +211,6 @@ export const LyricsModal = () => {
           <LyricModalHeader />
           <div className="flex flex-row w-full max-w-300 h-[80vh] px-12 gap-35">
             <LyricModalLeft isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-            {/* FIXME: 空间不足够的时候，歌词都挤在一块，需要响应式重新布局了 */}
             <LyricModalRight activeLineIndex={activeLineIndex} setActiveLineIndex={setActiveLineIndex} handleWheel={handleWheel} />
           </div>
         </motion.div>
