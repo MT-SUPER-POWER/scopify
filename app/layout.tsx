@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../components/theme-provider";
 import { cn } from "@/lib/utils";
+import MainLayout from "../components/MainLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex-1 overflow-hidden">{children}</div>
+          <MainLayout>{children}</MainLayout>
         </ThemeProvider>
       </body>
     </html>

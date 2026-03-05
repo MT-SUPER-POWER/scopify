@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // 方案 B：移除 output: "export"，改为由 next-electron-server 提供本地文件服务支持
+  // output: "export",
   images: {
     unoptimized: true,
   },

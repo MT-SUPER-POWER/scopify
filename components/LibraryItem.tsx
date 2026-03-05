@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 interface LibraryItemProps {
@@ -16,16 +17,16 @@ export const LibraryItem = React.memo(({
 }: LibraryItemProps) => {
   if (isCollapsed) {
     return (
-      <div className="flex items-center justify-center w-full h-14 hover:bg-[#1a1a1a] rounded-md transition-colors cursor-pointer active:scale-95 group">
+      <Link href={`/playlist/${123}`} className="flex items-center justify-center w-full h-14 hover:bg-[#1a1a1a] rounded-md transition-colors cursor-pointer active:scale-95 group">
         <div className="w-12 h-12 rounded-md overflow-hidden shadow-lg transition-transform group-hover:scale-110">
           <img src={coverImg} alt={title} className="w-full h-full object-cover" />
         </div>
-      </div>
+      </Link>
     );
   }
 
   return (
-    <div className="flex items-center gap-3 p-2 hover:bg-[#1a1a1a] rounded-md cursor-pointer transition-colors group">
+    <Link href={`/playlist/${123}`} className="flex items-center gap-3 p-2 hover:bg-[#1a1a1a] rounded-md cursor-pointer transition-colors group">
       <div className="w-12 h-12 rounded-md shrink-0 overflow-hidden shadow-md transition-transform group-hover:scale-105">
         <img src={coverImg} alt={title} className="w-full h-full object-cover" />
       </div>
@@ -38,6 +39,6 @@ export const LibraryItem = React.memo(({
           {subtitle}
         </span>
       </div>
-    </div>
+    </Link>
   );
 });

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"
-import { Plus, PanelLeftClose, Menu, PanelRightClose } from "lucide-react";
+import { Plus, PanelLeftClose, Menu } from "lucide-react";
 
 export function SiderBarMenu({
   panelAPI
@@ -27,9 +27,7 @@ export function SiderBarMenu({
 
         {/* Group -- Sider Function */}
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="dropdown-menu-label-momo mt-1">
-            Sider Bar
-          </DropdownMenuLabel>
+          <DropdownMenuLabel className="dropdown-menu-label-momo mt-1"> Sider Bar </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => panelAPI?.collapse?.()}>
             <PanelLeftClose className="w-5 h-5 hover:scale-110 active:scale-95 transition-transform mr-2" />
