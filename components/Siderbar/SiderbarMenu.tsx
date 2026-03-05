@@ -10,7 +10,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Plus, PanelLeftClose, Menu, PanelRightClose } from "lucide-react";
 
-export function SiderBarMenu() {
+export function SiderBarMenu({
+  panelAPI
+}: {
+  panelAPI?: {
+    collapse: () => void | undefined;
+    expand: () => void | undefined;
+  };
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -24,11 +31,7 @@ export function SiderBarMenu() {
             Sider Bar
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <PanelRightClose className="w-5 h-5 mr-2" />
-            <span>Enlarge</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => panelAPI?.collapse?.()}>
             <PanelLeftClose className="w-5 h-5 hover:scale-110 active:scale-95 transition-transform mr-2" />
             <span>Collapse</span>
           </DropdownMenuItem>

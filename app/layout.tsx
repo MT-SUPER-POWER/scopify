@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ! FOR BETTER SEO
+// FOR BETTER SEO
 export const metadata: Metadata = {
-  title: "Momo Music Player",
+  title: "Scopify",
   description: "Music Player React Project",
 };
 

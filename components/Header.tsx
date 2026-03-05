@@ -1,15 +1,41 @@
 import { cn } from "@/lib/utils";
-import { Search, ChevronLeft, ChevronRight, Bell, Users } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import RightActions from "./Header/RightActions";
+import { useEffect, useState } from "react";
+import os from "node:os";
 
-const Header = ({ onOpenSearch }: { onOpenSearch?: () => void }) => {
-  // TODO: 加一个磨砂玻璃的背景，只有下拉的时候才可以看到，在最顶的时候看不到
+const Header = ({
+  onOpenSearch,
+  scrollContainer
+}: { onOpenSearch?: () => void; scrollContainer: HTMLDivElement | null }) => {
+  const [isAtTop, setIsAtTop] = useState(true);
+
+  useEffect(() => {
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      setIsAtTop(scrollContainer.scrollTop === 0);
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll);
+    return () => scrollContainer.removeEventListener("scroll", handleScroll);
+  }, [scrollContainer]);
+
   return (
     <div
       className={cn(
         "h-16 w-full flex items-center justify-between px-6 shrink-0 absolute gap-2 lg:gap-0",
-        "top-0 z-20 bg-linear-to-b from-black/60 to-transparent",
+        "top-0 z-20",
       )}
     >
+      {/* NOTE: 磨砂玻璃背景层*/}
+      <div
+        className={cn(
+          "absolute inset-0 bg-momo-grey/10 backdrop-blur-lg -z-10 transition-opacity duration-300 rounded-[10px]",
+          isAtTop ? "opacity-0" : "opacity-100 border-b border-white/5"
+        )}
+      />
+
       {/* Navigation Arrows & Search */}
       <div className="flex items-center gap-4">
         <div className="flex gap-2">
@@ -33,41 +59,19 @@ const Header = ({ onOpenSearch }: { onOpenSearch?: () => void }) => {
         )}
       >
         <Search className="w-6 h-6 shrink-0 text-zinc-400 group-hover:text-white" />
-        {/* TODO: 替换为 Input */}
+        {/* TODO: 接入网易搜索 API，切换为 shadcn 输入组件 */}
         <span className="text-zinc-400 font-medium text-sm flex-1 text-left group-hover:text-white truncate">
           What do you want to play?
         </span>
         <div className="flex items-center gap-1 shrink-0 text-zinc-400 border border-zinc-600 rounded px-1.5 py-0.5 text-[10px] font-bold">
-          <span>Ctrl</span>
+          <span>{os.type() === "Darwin" ? "⌘" : "Ctrl"}</span>
           <span>K</span>
         </div>
       </button>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-2">
-        <button
-          className={cn(
-            "px-4 py-[7.5] rounded-full",
-            "bg-white text-black font-bold text-sm hover:scale-110 transition-transform",
-            "hidden xl:block",
-          )}
-        >
-          Premium
-        </button>
-        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-zinc-400 hover:text-white hover:scale-105 transition-transform">
-          <Bell className="w-5 h-5" />
-        </button>
-        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-zinc-400 hover:text-white hover:scale-105 transition-transform">
-          <Users className="w-5 h-5" />
-        </button>
-        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white hover:scale-105 transition-transform border-[3px] border-black/70 hover:border-zinc-700">
-          {/* TODO: 拆分作为一个单独的 Mock 组件，只有用户没有上传自己头像的时候来用 */}
-          {/* TODO: 加一个点击就出现的下拉菜单给用户头像 */}
-          <div className="w-full h-full rounded-full bg-pink-600 flex items-center justify-center">
-            <span className="text-xs font-bold"> M </span>
-          </div>
-        </button>
-      </div>
+      <RightActions />
+
     </div>
   );
 };

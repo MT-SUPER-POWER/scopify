@@ -1,3 +1,5 @@
+import React from "react";
+
 interface LibraryItemProps {
   id: string | number;
   title: string;
@@ -6,7 +8,7 @@ interface LibraryItemProps {
   isCollapsed?: boolean;
 }
 
-export const LibraryItem = ({
+export const LibraryItem = React.memo(({
   title,
   subtitle,
   coverImg,
@@ -38,4 +40,4 @@ export const LibraryItem = ({
       </div>
     </div>
   );
-};
+});

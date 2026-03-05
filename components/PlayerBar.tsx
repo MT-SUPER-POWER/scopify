@@ -75,7 +75,10 @@ export const PlayerBar = () => {
   };
 
   return (
-    <div className="h-22.5 bg-black w-full flex px-4 items-center justify-between z-20">
+    <div className={cn(
+      "h-17 lg:h-20 bg-black w-full flex px-4 items-center justify-between z-20",
+      "transition-all ease-linear duration-300"
+    )}>
 
       {/* Left: Song Info */}
       <div className="flex items-center gap-3.5 flex-3">
