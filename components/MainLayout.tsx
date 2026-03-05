@@ -60,10 +60,15 @@ export default function MainLayout({
 
   return (
     <LyricsProvider>
-      <div className="w-full h-screen flex flex-col bg-black text-white font-sans overflow-hidden select-none p-2 gap-2">
+      {/* 上下结构 */}
+      <div className={cn(
+        "w-full h-screen flex flex-col bg-black text-white font-sans",
+        "overflow-hidden select-none p-2 gap-2"
+      )}>
         <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         <LyricsModal />
 
+        {/* 左右结构 */}
         <div className="flex-1 min-h-0 relative">
           <ResizablePanelGroup orientation="horizontal"
             defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
@@ -92,10 +97,10 @@ export default function MainLayout({
               )}
             />
 
-            <ResizablePanel defaultSize={80}>
-              <div className="h-full bg-[#121212] rounded-lg relative flex flex-col min-w-0">
+            <ResizablePanel>
+              <div className="h-full bg-[#121212] rounded-lg relative flex flex-col overflow-hidden">
                 <Header onOpenSearch={() => setIsSearchOpen(true)} scrollContainer={scrollContainer} />
-                <ScrollArea className="flex-1 overflow-y-auto relative" viewportRef={setScrollContainer}>
+                <ScrollArea className="flex-1 min-h-0 overflow-y-auto" ref={setScrollContainer}>
                   {children}
                 </ScrollArea>
               </div>
