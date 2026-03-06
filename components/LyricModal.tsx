@@ -29,7 +29,11 @@ const COVER_URL = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?
 function LyricModalHeader() {
   const { closeLyrics } = useLyrics();
   return (
-    <div className={cn("absolute top-0 left-0 w-full h-24 z-50 pointer-events-none flex items-start pt-6 pl-6 lg:pt-10 lg:pl-10", "hidden hover:block")}>
+    <div className={cn(
+      "absolute top-0 left-0 w-full h-24 z-50 pointer-events-none flex items-start pt-6 pl-6 lg:pt-10 lg:pl-10",
+      // 移除 hidden，使用透明度控制
+      "opacity-0 transition-opacity duration-300 hover:opacity-100"
+    )}>
       <button
         onClick={closeLyrics}
         className="pointer-events-auto p-2 lg:p-3 bg-black/20 hover:bg-black/40 text-white/80 hover:text-white rounded-full transition-all duration-300 backdrop-blur-md"
@@ -136,8 +140,6 @@ function Lyric({ activeLineIndex, setActiveLineIndex, handleWheel }: {
   );
 }
 
-
-
 // 主组件
 export default function LyricsModal() {
   const { isLyricsOpen } = useLyrics();
@@ -181,6 +183,8 @@ export default function LyricsModal() {
             className="absolute inset-0 z-0 bg-cover bg-center blur-[80px] opacity-40 scale-125 pointer-events-none"
             style={{ backgroundImage: `url(${COVER_URL})` }}
           />
+
+          {/* 渲染层 */}
           <div className="absolute inset-0 z-0 bg-black/40 pointer-events-none" />
 
           <LyricModalHeader />
