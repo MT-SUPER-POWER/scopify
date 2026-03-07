@@ -18,6 +18,33 @@ const appServe = app.isPackaged ? serve({
 
 let mainWindow;
 
+// NOTE: Electron 子窗口的创建
+const createLoginWindow = () => {
+  const loginWindow = new BrowserWindow({
+    width: 450,
+    height: 600,
+    resizable: false,
+    autoHideMenuBar: true,
+    parent: mainWindow, // 设置父窗口
+    modal: true, // 可选：如果你希望它是模态的
+    webPreferences: {
+      preload: join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+    }
+  });
+
+  if (app.isPackaged) {
+    loginWindow.loadURL("app://-/login");
+  } else {
+    loginWindow.loadURL("http://localhost:3000/login");
+  }
+};
+
+ipcMain.on("open-login-window", () => {
+  createLoginWindow();
+});
+
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1400,

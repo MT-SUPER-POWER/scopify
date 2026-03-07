@@ -5,6 +5,7 @@ interface ElectronAPI {
   enterFullScreen: () => void;
   exitFullScreen: () => void;
   onFullScreenChanged: (callback: (isFullScreen: boolean) => void) => void;
+  openLoginWindow: () => void;
 }
 
 declare global {

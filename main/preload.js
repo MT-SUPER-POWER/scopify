@@ -12,6 +12,7 @@ try {
       // NOTE: 渲染线程通过 ipcRenderer 来和主线程交互
       ipcRenderer.on("window-full-screen-changed", (event, data) => { callback(data.isFullScreen); });
     },
+    openLoginWindow: () => ipcRenderer.send("open-login-window"),
   });
 } catch (error) {
   console.error("[Preload] Error:", error);
