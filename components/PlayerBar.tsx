@@ -23,6 +23,7 @@ import { useLyrics } from "./MainLayout";
 import { VolumeControl } from "@/components/VolumeControl";
 import { SmoothSlider } from "@/components/SmoothSlider";
 import { cn } from "@/lib/utils";
+import { usePlayerStore } from "@/store";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ UTILS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -60,7 +61,10 @@ export const PlayerBar = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(30);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [volume, setVolume] = useState(50); // TODO: 从 Zustand 获取音量状态
+
+  // TODO: 从 Zustand 获取音量状态
+  const volume = usePlayerStore((state) => state.volume);
+  const setVolume = usePlayerStore((state) => state.setVolume);
 
   // 监听全屏状态变化（支持 Electron 和 Web 环境）
   useFullScreenListener((isFullScreen) => {
@@ -69,8 +73,8 @@ export const PlayerBar = () => {
 
   // 处理音量变化（可以连接到实际的音频播放器）
   const handleVolumeChange = (newVolume: number) => {
-    // usePlayerStore.setVolume(newVolume); // TODO: 连接到实际的音频播放器
     setVolume(newVolume);
+    // TODO: 连接到实际的音频播放器
   };
 
   return (
