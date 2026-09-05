@@ -1,5 +1,5 @@
 import { app, BrowserWindow, screen, Tray } from "electron";
-import { __iconTray, __preloadScript, desktopConfig } from "@main/constants";
+import { __iconTray, __preloadScript, desktopConfig, RENDERER_SCHEME } from "@main/constants";
 import { trayLog } from "@main/utils/logger";
 
 const TRAY_WIDTH = 240;
@@ -43,7 +43,7 @@ function createTrayWindow() {
 
   const useStaticRenderer = app.isPackaged || process.env.ELECTRON_RENDERER_MODE === "static";
   const devBase = `http://${desktopConfig.frontend.host}:${desktopConfig.frontend.devPort}`;
-  const trayUrl = useStaticRenderer ? "app://-/tray/" : `${devBase}/tray`;
+  const trayUrl = useStaticRenderer ? `${RENDERER_SCHEME}://-/tray/` : `${devBase}/tray`;
 
   trayWindow = window;
   void window.loadURL(trayUrl).catch((error) => {

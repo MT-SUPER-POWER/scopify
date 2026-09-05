@@ -1,6 +1,12 @@
 import fs from "node:fs/promises";
 import { app, BrowserWindow, ipcMain } from "electron";
-import { __iconIcoPath, __iconWindow, __preloadScript, desktopConfig } from "@main/constants";
+import {
+  __iconIcoPath,
+  __iconWindow,
+  __preloadScript,
+  desktopConfig,
+  RENDERER_SCHEME,
+} from "@main/constants";
 import { loginLog } from "@main/utils/logger";
 
 // 在启动阶段尽早暴露资源打包错误，但不阻断主窗口启动。
@@ -40,7 +46,7 @@ export function createLoginWindow(mainWin: BrowserWindow) {
 
   const useStaticRenderer = app.isPackaged || process.env.ELECTRON_RENDERER_MODE === "static";
   const devBase = `http://${desktopConfig.frontend.host}:${desktopConfig.frontend.devPort}`;
-  const loginUrl = useStaticRenderer ? "app://-/login/" : `${devBase}/login`;
+  const loginUrl = useStaticRenderer ? `${RENDERER_SCHEME}://-/login/` : `${devBase}/login`;
 
   void loginWindow
     .loadURL(loginUrl)
