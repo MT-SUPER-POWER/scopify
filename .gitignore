@@ -73,6 +73,7 @@ CONTEXT.md
 .gemini/
 .opencode/
 .mcp.json
+CLAUDE.md
 
 # DOCS
 docs/plan/**
