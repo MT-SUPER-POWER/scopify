@@ -83,16 +83,6 @@ export default function TrayPage() {
     }
   }, [isDesktop, smartRouter]);
 
-  // 透明宿主窗口只承载内容卡片，避免原生背景和圆角介入。
-  useEffect(() => {
-    document.documentElement.classList.add("tray-html");
-    document.body.classList.add("tray-body");
-    return () => {
-      document.documentElement.classList.remove("tray-html");
-      document.body.classList.remove("tray-body");
-    };
-  }, []);
-
   // 水合问题
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -113,8 +103,8 @@ export default function TrayPage() {
     "h-9 w-full justify-start rounded-md px-3 py-5 font-normal text-content-muted transition-colors hover:bg-surface-elevated hover:text-content";
 
   return (
-    <main className="size-full bg-transparent p-1">
-      <div className="flex size-full animate-in flex-col gap-1 overflow-hidden rounded-xl border border-border bg-surface-overlay p-2 font-sans text-[13px] font-medium text-content duration-200 select-none zoom-in-95 fade-in">
+    <main data-tray-content className="size-full bg-background">
+      <div className="flex size-full flex-col gap-1 overflow-hidden border border-border bg-surface-overlay p-2 font-sans text-[13px] font-medium text-content select-none">
         {/* 头部：当前歌曲 - 固定 */}
         <SongTitle
           title={`${playback.track?.title || t("common.meta.unknownSong")} -

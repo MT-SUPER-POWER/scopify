@@ -183,11 +183,6 @@ img,
   background: transparent !important;
 }
 
-.tray-html,
-.tray-body {
-  background: transparent !important;
-}
-
 .desktop-playback-controller-shell {
   --desktop-controller-background: var(--background);
   --desktop-controller-primary: var(--foreground);

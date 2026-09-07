@@ -1,43 +1,54 @@
-import { app, BrowserWindow, screen, Tray } from "electron";
 import { __iconTray, __preloadScript, desktopConfig, RENDERER_SCHEME } from "@main/constants";
+import { app, BrowserWindow, nativeTheme, screen, Tray } from "electron";
+import { createTrayPanelController } from "./trayPanel";
+import type { TrayOptions } from "@/types/tray";
 import { trayLog } from "@main/utils/logger";
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ CONSTANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 默认 TrayWindow 大小
 const TRAY_WIDTH = 240;
-const TRAY_HEIGHT = 420;
-const X_OFFSET = 15;
-const Y_OFFSET = 4;
+const TRAY_HEIGHT = 400;
 
 // Electron 原生对象必须保留强引用，否则垃圾回收会让托盘和窗口提前失效。
 export let trayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
-let lastBlurTime = 0;
 
+let panelController: ReturnType<typeof createTrayPanelController> | null = null;
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ FUNCTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * 获取托盘窗口
+ */
 export function getTrayWindow(): BrowserWindow | null {
   return trayWindow && !trayWindow.isDestroyed() ? trayWindow : null;
 }
 
-interface TrayOptions {
-  onMainWindowRequested?(): Promise<void> | void;
-}
-
+/**
+ * 创建托盘窗口
+ */
 function createTrayWindow() {
-  const window = new BrowserWindow({
+  const _trayWindow = new BrowserWindow({
     width: TRAY_WIDTH,
     height: TRAY_HEIGHT,
     show: false,
     frame: false,
     fullscreenable: false,
-    transparent: true,
+    transparent: false,
+    // 关闭 Windows 原生边框动效，消除显隐与关闭时的系统过渡残影
+    thickFrame: false,
     hasShadow: false,
     alwaysOnTop: true,
     resizable: false,
     skipTaskbar: true,
-    backgroundColor: "#00000000",
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#18181b" : "#ffffff",
     webPreferences: {
       preload: __preloadScript,
       nodeIntegration: false,
       contextIsolation: true,
-      devTools: false, // 生产环境禁用开发者工具
+      devTools: false, // 是否启用开发者工具
+      backgroundThrottling: true, // 是否开启后台运行时保持活跃
     },
   });
 
@@ -45,87 +56,68 @@ function createTrayWindow() {
   const devBase = `http://${desktopConfig.frontend.host}:${desktopConfig.frontend.devPort}`;
   const trayUrl = useStaticRenderer ? `${RENDERER_SCHEME}://-/tray/` : `${devBase}/tray`;
 
-  trayWindow = window;
-  void window.loadURL(trayUrl).catch((error) => {
-    trayLog.error("failed to load", {
-      destroyed: window.isDestroyed(),
-      error,
-    });
+  trayWindow = _trayWindow; // 创建 trayWindow 并赋值
+  const controller = createTrayPanelController({
+    window: _trayWindow,
+    getWorkArea: (point) => screen.getDisplayNearestPoint(point).workArea,
   });
-  window.webContents.on("did-fail-load", (_event, code, desc, validatedURL) => {
+  panelController = controller;
+  // 页面加载完成后直接标记控制器就绪
+  void _trayWindow
+    .loadURL(trayUrl)
+    .then(() => {
+      if (!_trayWindow.isDestroyed()) controller.markReady();
+    })
+    .catch((error) => {
+      trayLog.error("failed to load", {
+        destroyed: _trayWindow.isDestroyed(),
+        error,
+      });
+    });
+  _trayWindow.webContents.on("did-fail-load", (_event, code, desc, validatedURL) => {
     trayLog.error("did-fail-load", { code, desc, validatedURL });
   });
 
-  window.on("blur", () => {
-    lastBlurTime = Date.now();
-    if (!window.isDestroyed()) window.destroy();
+  // 失去焦点时隐藏
+  _trayWindow.on("blur", () => {
+    controller.blur();
   });
 
-  window.on("closed", () => {
-    if (trayWindow === window) trayWindow = null;
-  });
-
-  return window;
-}
-
-function toggleTrayWindow(trayBounds?: Electron.Rectangle) {
-  const timeSinceLastBlur = Date.now() - lastBlurTime;
-  const existingWindow = trayWindow && !trayWindow.isDestroyed() ? trayWindow : null;
-
-  if (existingWindow?.isVisible()) {
-    existingWindow.destroy();
-    return;
-  }
-  if (timeSinceLastBlur < 100) {
-    return;
-  }
-
-  const currentTrayWindow = existingWindow ?? createTrayWindow();
-
-  const windowBounds = currentTrayWindow.getBounds();
-  const fallbackPoint = screen.getCursorScreenPoint();
-  const targetPoint = trayBounds ?? fallbackPoint;
-  const currentDisplay = screen.getDisplayNearestPoint(targetPoint);
-  const workArea = currentDisplay.workArea;
-  const maxRight = workArea.x + workArea.width;
-
-  const bounds = trayBounds ?? {
-    x: fallbackPoint.x,
-    y: fallbackPoint.y,
-    width: 0,
-    height: 0,
-  };
-
-  let x = Math.round(bounds.x) + X_OFFSET;
-  if (x + windowBounds.width > maxRight) {
-    x = Math.round(bounds.x + bounds.width - windowBounds.width) - X_OFFSET;
-  }
-  if (x < workArea.x) x = workArea.x + 10;
-
-  let y: number;
-  if (bounds.y > currentDisplay.bounds.height / 2) {
-    y = bounds.y - windowBounds.height - Y_OFFSET;
-  } else {
-    y = bounds.y + bounds.height + Y_OFFSET;
-  }
-  if (y < workArea.y) y = workArea.y + 10;
-  if (y + windowBounds.height > workArea.y + workArea.height) {
-    y = workArea.y + workArea.height - windowBounds.height - 10;
-  }
-
-  currentTrayWindow.setOpacity(0);
-  currentTrayWindow.setPosition(x, y, false);
-  currentTrayWindow.show();
-  currentTrayWindow.focus();
-
-  setTimeout(() => {
-    if (currentTrayWindow && !currentTrayWindow.isDestroyed() && currentTrayWindow.isVisible()) {
-      currentTrayWindow.setOpacity(1);
+  _trayWindow.on("closed", () => {
+    controller.dispose();
+    if (trayWindow === _trayWindow) {
+      trayWindow = null;
+      panelController = null;
     }
-  }, 20);
+  });
+
+  return _trayWindow;
 }
 
-/** 初始化系统托盘和按需创建的托盘窗口。重复调用保持幂等。 */
+/**
+ * 唤醒主窗口
+ * @param mainWindow 主窗口
+ * @param options 回调
+ */
+const AwakeMainWindow = (mainWindow: BrowserWindow, options: TrayOptions) => {
+  panelController?.hide();
+  if (options.onMainWindowRequested) {
+    void Promise.resolve(options.onMainWindowRequested()).catch((error) => {
+      trayLog.error("failed to reveal the main window", error);
+    });
+    return;
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (mainWindow.isVisible()) {
+      mainWindow.focus();
+    } else {
+      mainWindow.show();
+    }
+  }
+};
+
+/** 初始化系统托盘和常驻托盘窗口。重复调用保持幂等。 */
 export function initTray(mainWindow: BrowserWindow, options: TrayOptions = {}) {
   // 如果已经初始化过，不要重复创建
   if (tray) return;
@@ -133,39 +125,32 @@ export function initTray(mainWindow: BrowserWindow, options: TrayOptions = {}) {
   tray = new Tray(__iconTray);
   tray.setToolTip("Scopify");
 
-  tray.on("right-click", (_event, trayBounds) => {
-    toggleTrayWindow(trayBounds);
+  tray.on("right-click", () => {
+    // 在事件入口保存点击位置，等待首次渲染期间移动鼠标不会改变锚点。
+    const point = screen.getCursorScreenPoint();
+    if (!getTrayWindow()) createTrayWindow();
+    panelController?.requestOpen(point);
   });
 
-  tray.on("click", (_event, trayBounds) => {
-    toggleTrayWindow(trayBounds);
+  tray.on("click", (_event) => {
+    AwakeMainWindow(mainWindow, options);
   });
 
-  tray.on("double-click", () => {
+  tray.on("double-click", (_event) => {
+    AwakeMainWindow(mainWindow, options);
+  });
+
+  // 预热托盘窗口，使其在后台静默完成渲染，避免初次呼出时出现黑底或延迟
+  createTrayWindow();
+
+  // 妥善清理 Tray && TrayWindow，避免退出时系统托盘留下残影
+  app.on("before-quit", () => {
+    panelController?.dispose();
     if (trayWindow && !trayWindow.isDestroyed()) {
       trayWindow.destroy();
+      trayWindow = null;
     }
-    if (options.onMainWindowRequested) {
-      void Promise.resolve(options.onMainWindowRequested()).catch((error) => {
-        trayLog.error("failed to reveal the main window", error);
-      });
-      return;
-    }
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      if (mainWindow.isVisible()) {
-        mainWindow.focus();
-      } else {
-        mainWindow.show();
-      }
-    }
-  });
-
-  // 妥善清理 Tray，避免退出时系统托盘留下残影
-  app.on("before-quit", () => {
-    if (trayWindow && !trayWindow.isDestroyed()) trayWindow.destroy();
-    trayWindow = null;
-    if (tray) {
+    if (tray && !tray.isDestroyed()) {
       tray.destroy();
       tray = null;
     }
